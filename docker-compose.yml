@@ -1,0 +1,41 @@
+# use version according to the docker engine
+version: "3.8"
+
+######### Services #########
+services:
+
+     # setup php-FPM and mount application code into the container
+    client.z3:
+        build:
+            # From which directory you want to execute the build process
+            context: .docker/dev/node
+            # Docker config file to be used when building container image
+            dockerfile: Dockerfile
+        # Name of the container to be shown in logs and CLI
+        container_name: client.z3
+        restart: always
+        volumes:
+            # map main frontend code directory into container at app to get changes in container instantly
+            - ./:/app
+        networks:
+            - frontend-net.z3
+
+    # setup nginx client to handle frontend requests
+    webclient.z3:
+        image: nginx:1.17-alpine
+        container_name: webclient.z3
+        restart: always
+        ports:
+            - 8021:90
+        volumes:
+            - ./.docker/dev/nginx/logs:/var/log/nginx
+            - ./.docker/dev/nginx/conf.d:/etc/nginx/conf.d:ro
+        depends_on:
+            - client.z3
+        links:
+            - client.z3
+        networks:
+            - frontend-net.z3
+
+networks:
+    frontend-net.z3: {}        
